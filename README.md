@@ -409,6 +409,202 @@ Over-temperature warning (>105 °C): `led_state` is set, Timer0 ISR blinks all L
 | `msg_id.h`              | All 5 message ID defines shared with ECU1/ECU2             |
 
 ---
+# CAN Bus ECU Interconnection
+
+## Network Architecture
+
+The system consists of multiple Electronic Control Units (ECUs) connected through a Controller Area Network (CAN) bus. Communication between ECUs is achieved using a twisted-pair differential bus consisting of CANH and CANL lines.
+
+```text
+                    120Ω                          120Ω
+              ┌────────────┐                ┌─────────────┐
+              │ Engine ECU │                │ Dashboard ECU│
+              └─────┬──────┘                └──────┬──────┘
+                    │                                   │
+====================CANH=====================================
+====================CANL=====================================
+                    │                                   │
+             ┌──────┴──────┐                   ┌────────┴──────┐
+             │ Radar ECU   │                   │ Black Box ECU │
+             └──────┬──────┘                   └────────┬──────┘
+                    │                                   │
+             ┌──────┴──────┐                   ┌────────┴──────┐
+             │ ABS ECU     │                   │ Airbag ECU    │
+             └─────────────┘                   └───────────────┘
+```
+
+---
+
+## ECU Internal Structure
+
+Each ECU consists of:
+
+- PIC18F4580 Microcontroller
+- MCP2515 CAN Controller
+- TJA1050 CAN Transceiver
+
+```text
+          Sensors / Actuators
+                    │
+                    ▼
+          ┌─────────────────┐
+          │   PIC18F4580    │
+          └─────────────────┘
+                    │
+                 SPI Bus
+                    │
+                    ▼
+          ┌─────────────────┐
+          │     MCP2515     │
+          │ CAN Controller  │
+          └─────────────────┘
+                    │
+                    ▼
+          ┌─────────────────┐
+          │     TJA1050     │
+          │ CAN Transceiver │
+          └─────────────────┘
+                 │      │
+               CANH    CANL
+                  ╲    ╱
+                   ╲  ╱
+                Twisted Pair
+```
+
+---
+
+## SPI Connections
+
+| PIC18F4580 | MCP2515 |
+|------------|---------|
+| RC3 (SCK) | SCK |
+| RC5 (SDO) | SI |
+| RC4 (SDI) | SO |
+| RA5 | CS |
+| RB0/INT0 | INT |
+| VCC | VCC |
+| GND | GND |
+
+---
+
+## CAN Controller to Transceiver Connections
+
+| MCP2515 | TJA1050 |
+|---------|---------|
+| TXCAN | TXD |
+| RXCAN | RXD |
+| VCC | VCC |
+| GND | GND |
+
+---
+
+## Twisted Pair CAN Wiring
+
+The CANH and CANL lines are physically twisted together to reduce electromagnetic interference and improve communication reliability.
+
+```text
+CANH  /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+CANL  \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+```
+
+### Advantages
+
+- High noise immunity
+- Reduced EMI
+- Reliable long-distance communication
+- Differential signaling capability
+
+---
+
+## CAN Bus Termination
+
+Only the ECUs located at the ends of the network contain termination resistors.
+
+```text
+120Ω                                       120Ω
+ │                                            │
+CANH========================================CANH
+CANL========================================CANL
+```
+
+---
+
+## Differential Signaling
+
+### Recessive State (Logic 1)
+
+```text
+CANH = 2.5V
+CANL = 2.5V
+
+Differential Voltage = 0V
+```
+
+### Dominant State (Logic 0)
+
+```text
+CANH ≈ 3.5V
+CANL ≈ 1.5V
+
+Differential Voltage ≈ 2V
+```
+
+---
+
+## Data Flow
+
+```text
+Sensor Data
+     │
+     ▼
+PIC18F4580
+     │
+SPI Communication
+     │
+MCP2515
+     │
+TJA1050
+     │
+================================
+ CANH / CANL Twisted Pair Bus
+================================
+     │
+TJA1050
+     │
+MCP2515
+     │
+PIC18F4580
+     │
+Display / Memory / Actuator
+```
+
+---
+
+## Overall System Architecture
+
+```text
+                Engine ECU
+             +-------------+
+             | PIC18F4580  |
+             | MCP2515     |
+             | TJA1050     |
+             +------+------+
+                    ||
+                    ||
+=====================================
+ CANH        Twisted Pair        CANH
+ CANL        CAN Network         CANL
+=====================================
+        ||             ||            ||
++---------------+ +-------------+ +---------------+
+| Radar ECU     | | Dashboard   | | Black Box ECU |
+| PIC18F4580    | | PIC18F4580  | | PIC18F4580    |
+| MCP2515       | | MCP2515     | | MCP2515       |
+| TJA1050       | | TJA1050     | | TJA1050       |
++---------------+ +-------------+ +---------------+
+```
+
+This architecture follows the standard automotive CAN bus topology used in modern vehicle communication systems.
 
 ## Hardware Pinout
 

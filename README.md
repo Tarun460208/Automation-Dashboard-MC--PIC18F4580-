@@ -416,22 +416,18 @@ Over-temperature warning (>105 °C): `led_state` is set, Timer0 ISR blinks all L
 The system consists of multiple Electronic Control Units (ECUs) connected through a Controller Area Network (CAN) bus. Communication between ECUs is achieved using a twisted-pair differential bus consisting of CANH and CANL lines.
 
 ```text
-                    120Ω                          120Ω
-              ┌────────────┐                ┌─────────────┐
-              │ Engine ECU │                │ Dashboard ECU│
-              └─────┬──────┘                └──────┬──────┘
+                    120Ω                              120Ω
+              ┌────────────┐                     ┌─────────────┐
+              │ECU1->Gear &|                     |ECU2->Speed &|
+              |   RPM      │                     │Indicator    |
+              └─────┬──────┘                     └──────┬──────┘
                     │                                   │
-====================CANH=====================================
-====================CANL=====================================
-                    │                                   │
-             ┌──────┴──────┐                   ┌────────┴──────┐
-             │ Radar ECU   │                   │ Black Box ECU │
-             └──────┬──────┘                   └────────┬──────┘
-                    │                                   │
-             ┌──────┴──────┐                   ┌────────┴──────┐
-             │ ABS ECU     │                   │ Airbag ECU    │
-             └─────────────┘                   └───────────────┘
-```
+        ====================CANH=====================================
+        ====================CANL=====================================
+                     │ 120ohm                                  
+             ┌─ ─────┴──────  ┐                   
+             │ECU3->Dashboard │                  
+             └─ ─────┬─── ─── ┘                   
 
 ---
 
@@ -442,49 +438,6 @@ Each ECU consists of:
 - PIC18F4580 Microcontroller
 - MCP2515 CAN Controller
 - TJA1050 CAN Transceiver
-
-```text
-          Sensors / Actuators
-                    │
-                    ▼
-          ┌─────────────────┐
-          │   PIC18F4580    │
-          └─────────────────┘
-                    │
-                 SPI Bus
-                    │
-                    ▼
-          ┌─────────────────┐
-          │     MCP2515     │
-          │ CAN Controller  │
-          └─────────────────┘
-                    │
-                    ▼
-          ┌─────────────────┐
-          │     TJA1050     │
-          │ CAN Transceiver │
-          └─────────────────┘
-                 │      │
-               CANH    CANL
-                  ╲    ╱
-                   ╲  ╱
-                Twisted Pair
-```
-
----
-
-## SPI Connections
-
-| PIC18F4580 | MCP2515 |
-|------------|---------|
-| RC3 (SCK) | SCK |
-| RC5 (SDO) | SI |
-| RC4 (SDI) | SO |
-| RA5 | CS |
-| RB0/INT0 | INT |
-| VCC | VCC |
-| GND | GND |
-
 ---
 
 ## CAN Controller to Transceiver Connections

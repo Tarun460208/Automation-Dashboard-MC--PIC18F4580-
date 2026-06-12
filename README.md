@@ -745,3 +745,9 @@ ID     DLC  Data            Decoded
 | `timer0.h/.c`          | `init_timer0()`: 8-bit mode, Fosc/4, no prescaler, preload=6, TMR0IE enabled |
 | `isr.h/.c`             | `__interrupt() isr()`: Timer0 blink (500 ms toggle) + CAN RX flag clear |
 | `message_handler.h/.c` | `process_canbus_data()`, `handle_speed_data()`, `handle_gear_data()`, `handle_rpm_data()`, `handle_engine_temp_data()`, `handle_indicator_data()`, `write_decimal()` |
+
+
+## Video Demonstration 
+
+https://github.com/user-attachments/assets/307c3848-172b-4190-82c7-2b058b7504c3
+
